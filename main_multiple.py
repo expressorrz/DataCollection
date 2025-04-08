@@ -13,7 +13,7 @@ class Camera(object):
     '''
     Class for RealSense camera
     '''
-    def __init__(self, device_ids, width=640, height=480, fps=30, enbale_filter=False):
+    def __init__(self, device_ids, width=640, height=480, fps=30, enbale_filter=True):
         # Configure depth and color streams
         self.enbale_filter = enbale_filter
 
@@ -142,9 +142,9 @@ def main(device_ids, width, high, fps, store_pc, task_id, operator_id, run_id):
         cameras[device_id] = camera
 
         save_color_path = os.path.join(base_path, f'device_{device_id}', f'task_{task_id}', f'op_{operator_id}', f'id_{run_id}', 'color')
-        save_depth_path = os.path.join(base_path, f'task_{task_id}', f'device_{device_id}', f'op_{operator_id}', f'id_{run_id}', 'depth')
-        save_pc_path = os.path.join(base_path, f'task_{task_id}', f'device_{device_id}', f'op_{operator_id}', f'id_{run_id}', 'pointcloud_3d')
-        save_npz_path = os.path.join(base_path, f'task_{task_id}', f'device_{device_id}', f'op_{operator_id}', f'id_{run_id}', 'data')
+        save_depth_path = os.path.join(base_path, f'device_{device_id}', f'task_{task_id}', f'op_{operator_id}', f'id_{run_id}', 'depth')
+        save_pc_path = os.path.join(base_path,  f'device_{device_id}', f'task_{task_id}', f'op_{operator_id}', f'id_{run_id}', 'pointcloud_3d')
+        save_npz_path = os.path.join(base_path,  f'device_{device_id}', f'task_{task_id}', f'op_{operator_id}', f'id_{run_id}', 'data')
 
         for path in [save_color_path, save_depth_path, save_pc_path, save_npz_path]:
             os.makedirs(path, exist_ok=True)
@@ -185,8 +185,8 @@ def main(device_ids, width, high, fps, store_pc, task_id, operator_id, run_id):
                 readable_timestamp = datetime.fromtimestamp(timestamp / 1000.0)
                 print(f'[Device {device_id}] Frame {frame_num} at {readable_timestamp} ms')
 
-                cv2.imwrite(os.path.join(save_paths[device_id]['color'], f'frame_{frame_num}.png'), color_img)
-                cv2.imwrite(os.path.join(save_paths[device_id]['depth'], f'frame_{frame_num}.png'), depth_colormap)
+                # cv2.imwrite(os.path.join(save_paths[device_id]['color'], f'frame_{frame_num}.png'), color_img)
+                # cv2.imwrite(os.path.join(save_paths[device_id]['depth'], f'frame_{frame_num}.png'), depth_colormap)
 
                 if store_pc:
                     save_2_ply(pc_ply, os.path.join(save_paths[device_id]['pc'], f'frame_{frame_num}.ply'))
@@ -207,7 +207,8 @@ if __name__ == '__main__':
     run_id = input("ID No.").strip()
 
     # Initialize video parameters
-    device_ids = ['327122075831','239722072823']
+    device_ids = ['327122075831', '239722072823']
+    # device_ids = ['327122075831', '239722072823', '247122071632']
     # device_id = '239722072823'
     fps, width, high = 30, 640, 480 
     store_pc = False

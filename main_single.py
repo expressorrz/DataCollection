@@ -13,7 +13,7 @@ class Camera(object):
     '''
     Class for RealSense camera
     '''
-    def __init__(self, device_id, width=640, height=480, fps=30, enbale_filter=False):
+    def __init__(self, device_id, width=640, height=480, fps=30, enbale_filter=True):
         # Configure depth and color streams
         self.enbale_filter = enbale_filter
 
@@ -132,10 +132,10 @@ class Camera(object):
 
 def main(device_id, width, high, fps, store_pc, task_id, operator_id, run_id):
     save_path = './media'
-    save_color_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/color'
-    save_depth_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/depth'
-    save_pc_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/pointcloud_3d'
-    save_npz_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/data'
+    save_color_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/color'
+    save_depth_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/depth'
+    save_pc_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/pointcloud_3d'
+    save_npz_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/data'
 
     for path in [save_color_path, save_depth_path, save_pc_path, save_npz_path]:
         os.makedirs(path, exist_ok=True)
@@ -193,9 +193,11 @@ if __name__ == '__main__':
     task_id = input("Task No.").strip()
     operator_id = input("Human No.").strip()
     run_id = input("ID No.").strip()
+    device_id = input("Device No.").strip()
 
     # Initialize video parameters
-    device_id = '327122075831'
+    device_ids = ['327122075831', '239722072823', '247122071632']
+    device_id = device_ids[int(device_id)]
     fps, width, high = 30, 640, 480 
     store_pc = False
 
