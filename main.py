@@ -13,8 +13,10 @@ class Camera(object):
     '''
     Class for RealSense camera
     '''
-    def __init__(self, width=640, height=480, fps=30):
+    def __init__(self, width=640, height=480, fps=30, enbale_filter=False):
         # Configure depth and color streams
+        self.enbale_filter = enbale_filter
+
         self.width = width
         self.height = height
         self.pipeline = rs.pipeline()
@@ -43,7 +45,6 @@ class Camera(object):
  
     def get_frame(self, store_pc=False):
         frames = self.pipeline.wait_for_frames()
-        colorizer = rs.colorizer()
         depth_to_disparity = rs.disparity_transform(True)
         disparity_to_depth = rs.disparity_transform(False)
 
@@ -61,10 +62,11 @@ class Camera(object):
         color_frame = aligned_frames.get_color_frame()
 
         # process depth frame with filters
-        depth_frame_filter = depth_frame
-        for filter in self.g_rs_depth_postprocess_list:
-            depth_frame_filter = filter.process(depth_frame_filter)
-        depth_frame = depth_frame_filter
+        if self.enbale_filter:
+            depth_frame_filter = depth_frame
+            for filter in self.g_rs_depth_postprocess_list:
+                depth_frame_filter = filter.process(depth_frame_filter)
+            depth_frame = depth_frame_filter
 
         color_image = np.asanyarray(color_frame.get_data())
         depth_image = np.asanyarray(depth_frame.get_data())
@@ -125,57 +127,68 @@ class Camera(object):
  
     def release(self):
         self.pipeline.stop()
+    
  
  
 if __name__ == '__main__':
-    video_path = './media/targetvideo_rgb.mp4'
-    video_depthc_path = './media/targetvideo_depthcolor.mp4'
-    video_depth16_path = './media/targetvideo_depth.h5'
+    task_id = input("Task No.").strip()
+    operator_id = input("Human No.").strip()
+    run_id = input("ID No.").strip()
 
     save_path = './media'
-    if not os.path.exists(f'{save_path}/color') or not os.path.exists(f'{save_path}/depth') or not os.path.exists(f'{save_path}/pointcloud_3d'):
-        print('save_path not exists, create it ...')
-        os.makedirs(f'{save_path}/data')
-        os.makedirs(f'{save_path}/color')
-        os.makedirs(f'{save_path}/depth')
-        os.makedirs(f'{save_path}/pointcloud_3d')
+    save_color_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/color'
+    save_depth_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/depth'
+    save_pc_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/pointcloud_3d'
+    save_npz_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/data'
+
+    for path in [save_color_path, save_depth_path, save_pc_path, save_npz_path]:
+        os.makedirs(path, exist_ok=True)
+
  
     # Initialize video parameters
     fps, width, high = 30, 640, 480 
-    mp4 = cv2.VideoWriter_fourcc(*'mp4v')  # video format setting
-    store_pc = True
+    store_pc = False
  
    # Initialize camera
     realsense_camera = Camera(width, high, fps)
-    idx = 0
-    is_recording = False  # 是否开始录制
-    print('Press "s" to start/stop recording, "q" to quit.')
+
+
+    print("Press 'r' to start recording, 'q' to quit.")
+
+    recording = False
+    cv2.namedWindow("Color Stream", cv2.WINDOW_AUTOSIZE)
+
 
     while True:
-        # Read RGB, depth, depth color frames from camera
         data_list = realsense_camera.get_frame(store_pc)
         timestamp, frame_num, color_image, depth_image, depth_colormap, pointcloud_data_ply, pointcloud_data_pcd = data_list
 
-        readable_timestamp = datetime.fromtimestamp(timestamp / 1000.0)
-        print(f'Frame {idx} at {readable_timestamp} ms, frame_num: {frame_num}')
-        cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('RealSense', color_image)
-        key = cv2.waitKey(1)
+        cv2.imshow("Color Stream", color_image)
 
-        if key & 0xFF == ord('s'):
-            is_recording = not is_recording  # 切换录制状态
-            if is_recording:
-                print('>> Start recording...')
-            else:
-                print('>> Pause recording...')
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('r'):
+            if not recording:
+                print(">>> Start recording ...")
+            recording = True
 
-        if is_recording:
-            img_bgr = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-            cv2.imwrite(f'{save_path}/color/{frame_num}.png', img_bgr)
-            cv2.imwrite(f'{save_path}/depth/{frame_num}.png', depth_colormap)
+        elif key == ord('q'):
+            cv2.destroyAllWindows()
+            realsense_camera.release()
+            print(">>> Recording ended, exiting program.")
+            print(f'Video saved to {save_color_path}, {save_depth_path}, {save_pc_path}, {save_npz_path}')
+            break
 
-            save_2_ply(pointcloud_data_ply, f'{save_path}/pointcloud_3d/{frame_num}.ply')
-            save_2_pcd(pointcloud_data_pcd, f'{save_path}/pointcloud_3d/{frame_num}.pcd')
+        if recording:
+            readable_timestamp = datetime.fromtimestamp(timestamp / 1000.0)
+            print(f'Frame {frame_num} at {readable_timestamp} ms')
+
+
+            # cv2.imwrite(f'{save_color_path}/{frame_num}.png', color_image)
+            # cv2.imwrite(f'{save_depth_path}/{frame_num}.png', depth_colormap)
+
+            if store_pc:
+                save_2_ply(pointcloud_data_ply, f'{save_pc_path}/{frame_num}.ply')
+                save_2_pcd(pointcloud_data_pcd, f'{save_pc_path}/{frame_num}.pcd')
 
             data_dict = {
                 'frame_num': frame_num,
@@ -183,55 +196,4 @@ if __name__ == '__main__':
                 'color_img': color_image,
                 'depth_img': depth_image,
             }
-            np.savez(f'{save_path}/data/{frame_num}.npz', **data_dict)
-
-        if key & 0xFF == ord('q') or key == 27:
-            print('>> Recording finished.')
-            break
-
-        idx += 1
-
-    realsense_camera.release()
-    cv2.destroyAllWindows()
-    print(f'Video saved to {video_path}, {video_depthc_path}, {video_depth16_path}')
-
-    # while True:
-    #     # Read RGB, depth, depth color frames from camera
-    #     data_list = realsense_camera.get_frame(store_pc)
-    #     timestamp, frame_num, color_image, depth_image, depth_colormap, pointcloud_data_ply, pointcloud_data_pcd = data_list
-
-    #     readable_timestamp = datetime.fromtimestamp(timestamp / 1000.0)
-    #     print(f'Frame {idx} at {readable_timestamp} ms, frame_num: {frame_num}')
-    #     cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-    #     cv2.imshow('RealSense', color_image)
-    #     key = cv2.waitKey(1)
- 
-    #     if key & 0xFF == ord('s'):
-    #         flag_V = 1
-    #         # construct video writer for RGB , Depth and disparity
-    #         color_wr = cv2.VideoWriter(video_path, mp4, fps, (width, high), isColor=True)
-    #         colordepth_wr = cv2.VideoWriter(video_depthc_path, mp4, fps, (width, high), isColor=True)
-    #         idepth_wr = h5py.File(video_depth16_path, 'w')
-    #         print('>> Recording the video...')
-            
-    #     if flag_V == 1:
-    #         # Save the RGB and depth frames
-    #         color_wr.write(color_image)
-    #         colordepth_wr.write(depth_colormap)
-
-    #         depth16_image = cv2.imencode('.png', depth_image)[1]
-    #         depth_map_name = str(id).zfill(5) + '_depth.png'
-    #         idepth_wr[depth_map_name] = depth16_image
-    #         idx += 1
-    #         id += 1
-    #     if key & 0xFF == ord('q') or key == 27:
-    #         cv2.destroyAllWindows()
-    #         print('>> Recording finished.')
-    #         break
-    # # Release resources
-    # color_wr.release()
-    # colordepth_wr.release()
-
-    # idepth_wr.close()
-    # realsense_camera.release()
-    # print(f'Video saved to {video_path}, {video_depthc_path}, {video_depth16_path}')
+            np.savez(f'{save_npz_path}/{frame_num}.npz', **data_dict)
