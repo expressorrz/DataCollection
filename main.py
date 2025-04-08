@@ -145,11 +145,12 @@ if __name__ == '__main__':
     mp4 = cv2.VideoWriter_fourcc(*'mp4v')  # video format setting
     store_pc = True
  
-    # Initialize camera
+   # Initialize camera
     realsense_camera = Camera(width, high, fps)
     idx = 0
-    print('Press "s" to start recording, "q" to quit.')
-    
+    is_recording = False  # 是否开始录制
+    print('Press "s" to start/stop recording, "q" to quit.')
+
     while True:
         # Read RGB, depth, depth color frames from camera
         data_list = realsense_camera.get_frame(store_pc)
@@ -160,8 +161,15 @@ if __name__ == '__main__':
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('RealSense', color_image)
         key = cv2.waitKey(1)
- 
+
         if key & 0xFF == ord('s'):
+            is_recording = not is_recording  # 切换录制状态
+            if is_recording:
+                print('>> Start recording...')
+            else:
+                print('>> Pause recording...')
+
+        if is_recording:
             img_bgr = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
             cv2.imwrite(f'{save_path}/color/{frame_num}.png', img_bgr)
             cv2.imwrite(f'{save_path}/depth/{frame_num}.png', depth_colormap)
@@ -177,16 +185,15 @@ if __name__ == '__main__':
             }
             np.savez(f'{save_path}/data/{frame_num}.npz', **data_dict)
 
-            print('>> Recording the video...')
-            
         if key & 0xFF == ord('q') or key == 27:
-            cv2.destroyAllWindows()
             print('>> Recording finished.')
             break
 
-    realsense_camera.release()
-    print(f'Video saved to {video_path}, {video_depthc_path}, {video_depth16_path}')
+        idx += 1
 
+    realsense_camera.release()
+    cv2.destroyAllWindows()
+    print(f'Video saved to {video_path}, {video_depthc_path}, {video_depth16_path}')
 
     # while True:
     #     # Read RGB, depth, depth color frames from camera
