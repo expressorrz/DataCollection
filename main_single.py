@@ -13,7 +13,7 @@ class Camera(object):
     '''
     Class for RealSense camera
     '''
-    def __init__(self, width=640, height=480, fps=30, enbale_filter=False):
+    def __init__(self, device_id, width=640, height=480, fps=30, enbale_filter=False):
         # Configure depth and color streams
         self.enbale_filter = enbale_filter
 
@@ -21,6 +21,7 @@ class Camera(object):
         self.height = height
         self.pipeline = rs.pipeline()
         self.config = rs.config()
+        self.config.enable_device(device_id)
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, fps)
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, fps)
 
@@ -127,14 +128,9 @@ class Camera(object):
  
     def release(self):
         self.pipeline.stop()
-    
- 
- 
-if __name__ == '__main__':
-    task_id = input("Task No.").strip()
-    operator_id = input("Human No.").strip()
-    run_id = input("ID No.").strip()
 
+
+def main(device_id, width, high, fps, store_pc, task_id, operator_id, run_id):
     save_path = './media'
     save_color_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/color'
     save_depth_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/depth'
@@ -144,14 +140,8 @@ if __name__ == '__main__':
     for path in [save_color_path, save_depth_path, save_pc_path, save_npz_path]:
         os.makedirs(path, exist_ok=True)
 
- 
-    # Initialize video parameters
-    fps, width, high = 30, 640, 480 
-    store_pc = False
- 
-   # Initialize camera
-    realsense_camera = Camera(width, high, fps)
-
+    # Initialize camera
+    realsense_camera = Camera(device_id, width, high, fps)
 
     print("Press 'r' to start recording, 'q' to quit.")
 
@@ -197,3 +187,18 @@ if __name__ == '__main__':
                 'depth_img': depth_image,
             }
             np.savez(f'{save_npz_path}/{frame_num}.npz', **data_dict)
+    
+ 
+if __name__ == '__main__':
+    task_id = input("Task No.").strip()
+    operator_id = input("Human No.").strip()
+    run_id = input("ID No.").strip()
+
+    # Initialize video parameters
+    device_id = '327122075831'
+    fps, width, high = 30, 640, 480 
+    store_pc = False
+
+    main(device_id, width, high, fps, store_pc, task_id, operator_id, run_id)
+ 
+   
