@@ -1,3 +1,9 @@
 ./media
 ./bak
 *.ipynb
+
+*.png
+*.jpg
+*.npz
+*.pcd
+*.ply
