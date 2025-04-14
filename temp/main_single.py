@@ -21,7 +21,7 @@ class Camera(object):
         self.height = height
         self.pipeline = rs.pipeline()
         self.config = rs.config()
-        self.config.enable_device(device_id)
+        # self.config.enable_device(device_id)
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, fps)
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, fps)
 
@@ -70,6 +70,7 @@ class Camera(object):
             depth_frame = depth_frame_filter
 
         color_image = np.asanyarray(color_frame.get_data())
+        print(color_image)
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_colormap = np.asanyarray(self.g_colorizer.colorize(depth_frame).get_data())
 
@@ -131,7 +132,7 @@ class Camera(object):
 
 
 def main(device_id, width, high, fps, store_pc, task_id, operator_id, run_id):
-    save_path = './media'
+    save_path = './data'
     save_color_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/color'
     save_depth_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/depth'
     save_pc_path = f'{save_path}/{device_id}/task_{task_id}/op_{operator_id}/id_{run_id}/pointcloud_3d'
@@ -152,6 +153,8 @@ def main(device_id, width, high, fps, store_pc, task_id, operator_id, run_id):
     while True:
         data_list = realsense_camera.get_frame(store_pc)
         timestamp, frame_num, color_image, depth_image, depth_colormap, pointcloud_data_ply, pointcloud_data_pcd = data_list
+        print(f'color_image.shape: {color_image.shape}')
+        exit()
 
         cv2.imshow("Color Stream", color_image)
 

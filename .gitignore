@@ -1,5 +1,5 @@
-./media
-./bak
+/media
+/bak
 *.ipynb
 
 *.png
@@ -7,3 +7,8 @@
 *.npz
 *.pcd
 *.ply
+
+/build/
+/install/
+/log/
+/data/
