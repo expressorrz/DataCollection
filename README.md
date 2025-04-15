@@ -29,6 +29,14 @@ python main_single_realsense.py
 python main_multi_realsense.py
 ```
 
+**Collecting Poses**
+```
+source ../install/setup.bash
+
+ros2 launch pose_subscriber pose_subscriber.launch.py
+```
+
+
 You can customize parameters such as resolution, frame rate, and output directory using command-line arguments.
 
 ## License

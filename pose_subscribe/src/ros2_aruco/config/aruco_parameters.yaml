@@ -1,0 +1,9 @@
+/aruco_node:
+  ros__parameters:
+    marker_size: 0.055
+    aruco_dictionary_id: DICT_5X5_250
+    image_topic_eyeinhand: /robot1/D455_1/color/image_raw
+    camera_info_topic_eyeinhand: /robot1/D455_1/color/camera_info
+    image_topic_eyetohand: /robot1/D455_2/color/image_raw
+    camera_info_topic_eyetohand: /robot1/D455_2/color/camera_info
+    enable_viewer: true
