@@ -13,6 +13,8 @@ from common.timestamp_accumulator import get_accumulate_timestamp_idxs
 from shared_memory.shared_ndarray import SharedNDArray
 from shared_memory.shared_memory_ring_buffer import SharedMemoryRingBuffer
 from shared_memory.shared_memory_queue import SharedMemoryQueue, Full, Empty
+import zarr
+import numcodecs
 
 
 class Command(enum.Enum):
@@ -38,6 +40,7 @@ class SingleRealsense(mp.Process):
             enable_depth=False,
             enable_infrared=False,
             get_max_k=30,
+            save_path=None,
             advanced_mode_config=None,
             transform: Optional[Callable[[Dict], Dict]] = None,
             vis_transform: Optional[Callable[[Dict], Dict]] = None,
@@ -137,6 +140,23 @@ class SingleRealsense(mp.Process):
         self.vis_ring_buffer = vis_ring_buffer
         self.command_queue = command_queue
         self.intrinsics_array = intrinsics_array
+
+        self.save_path = save_path
+        if self.save_path is not None:
+            # 创建 data 和 meta 子组
+            store = zarr.DirectoryStore(os.path.join(self.save_path, 'replay_buffer.zarr'))
+            root = zarr.group(store=store, overwrite=False)
+            self.zarr_data = root.require_group("data")
+            self.zarr_meta = root.require_group("meta")
+
+            h, w = self.resolution[1], self.resolution[0]  # 720,1280
+            self.zarr_data.require_dataset("color", shape=(0, h, w, 3), dtype='uint8', chunks=(1, h, w, 3), overwrite=False)
+            self.zarr_data.require_dataset("depth", shape=(0, h, w), dtype='uint16', chunks=(1, h, w), overwrite=False)
+            self.zarr_data.require_dataset("timestamp", shape=(0,), dtype='float64', chunks=(1024,), overwrite=False)
+            self.zarr_data.require_dataset("step_idx", shape=(0,), dtype='int32', chunks=(1024,), overwrite=False)
+            self.zarr_meta.require_dataset("intrinsics", shape=(7,), dtype='float64', overwrite=True)
+
+
 
     
     @staticmethod
@@ -319,6 +339,8 @@ class SingleRealsense(mp.Process):
             order = ['fx', 'fy', 'ppx', 'ppy', 'height', 'width']
             for i, name in enumerate(order):
                 self.intrinsics_array.get()[i] = getattr(intr, name)
+                if self.save_path is not None:
+                    self.zarr_meta["intrinsics"][i] = getattr(intr, name)
 
             if self.enable_depth:
                 depth_sensor = pipeline_profile.get_device().first_depth_sensor()
@@ -412,6 +434,14 @@ class SingleRealsense(mp.Process):
                     rec_data = put_data
                 elif self.recording_transform is not None:
                     rec_data = self.recording_transform(dict(data))
+
+                
+                if self.save_path is not None:
+                    print(f'rec_data keys:', rec_data.keys())
+                    self.zarr_data["color"].append(rec_data["color"][None, ...])
+                    self.zarr_data["depth"].append(rec_data["depth"][None, ...])
+                    self.zarr_data["timestamp"].append(np.array([rec_data["timestamp"]]))
+                    self.zarr_data["step_idx"].append(np.array([rec_data["step_idx"]], dtype=np.int32))
 
 
                 if self.video_recorder.is_ready():

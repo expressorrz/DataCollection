@@ -6,7 +6,6 @@ from multiprocessing.managers import SharedMemoryManager
 import numpy as np
 import pyrealsense2 as rs
 from real_world.single_realsense4multi import SingleRealsense
-# from real_world.video_recorder import VideoRecorder
 
 class MultiRealsense:
     def __init__(self,
@@ -21,7 +20,6 @@ class MultiRealsense:
         enable_depth=False,
         enable_infrared=False,
         get_max_k=30,
-        save_path=None,
         advanced_mode_config: Optional[Union[dict, List[dict]]]=None,
         transform: Optional[Union[Callable[[Dict], Dict], List[Callable]]]=None,
         vis_transform: Optional[Union[Callable[[Dict], Dict], List[Callable]]]=None,
@@ -46,22 +44,6 @@ class MultiRealsense:
             vis_transform, n_cameras, Callable)
         recording_transform = repeat_to_list(
             recording_transform, n_cameras, Callable)
-        
-        # if video_recorder is None:
-        #     from real_world.video_recorder import VideoRecorder
-        #     video_recorder = VideoRecorder.create_h264(
-        #             fps=record_fps, 
-        #             codec='h264',
-        #             input_pix_fmt='bgr24',
-        #             crf=18,
-        #             thread_type='FRAME',
-        #             thread_count=1
-        #         )
-            
-        #     video_recorder = repeat_to_list(
-        #         video_recorder, n_cameras, VideoRecorder)
-
-        save_paths = [f'{save_path}/{i}' for i in range(len(serial_numbers))]
 
 
         cameras = dict()
@@ -78,7 +60,6 @@ class MultiRealsense:
                 enable_depth=enable_depth,
                 enable_infrared=enable_infrared,
                 get_max_k=get_max_k,
-                save_path=save_paths[i],
                 advanced_mode_config=advanced_mode_config[i],
                 transform=transform[i],
                 vis_transform=vis_transform[i],
@@ -207,6 +188,9 @@ class MultiRealsense:
     
     def get_intrinsics(self):
         return np.array([c.get_intrinsics() for c in self.cameras.values()])
+
+    def get_serial_numbers(self):
+        return [camera.serial_number for camera in self.cameras.values()]
     
     def get_depth_scale(self):
         return np.array([c.get_depth_scale() for c in self.cameras.values()])
@@ -220,7 +204,7 @@ class MultiRealsense:
             video_path = list()
             for i in range(self.n_cameras):
                 video_path.append(
-                    str(video_dir.joinpath(f'{i}/video.mp4').absolute()))
+                    str(video_dir.joinpath(f'cam_{i}.mp4').absolute()))
         assert len(video_path) == self.n_cameras
 
         for i, camera in enumerate(self.cameras.values()):
