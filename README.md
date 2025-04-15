@@ -21,12 +21,12 @@ Run the main script to start data collection:
 
 **Single camera**: 
 ```bash
-python main_single.py
+python main_single_realsense.py
 ```
 
 **Multiple Cameras**:
 ```bash
-python main_multiple.py
+python main_multi_realsense.py
 ```
 
 You can customize parameters such as resolution, frame rate, and output directory using command-line arguments.
