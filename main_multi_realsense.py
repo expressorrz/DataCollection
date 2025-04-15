@@ -54,7 +54,7 @@ def test(save_path):
 
          # 2. create data and metadata for zarr
         if save_path is not None:
-            root = zarr.open_group(os.path.join(save_path, 'replay_buffer.zarr'), mode='w')
+            root = zarr.open_group(os.path.join(save_path, 'data_buffer.zarr'), mode='w')
 
             data_groups = []
             meta_groups = []

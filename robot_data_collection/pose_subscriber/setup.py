@@ -23,7 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'subscriber_node = pose_subscriber.subscriber_node:main'
+            'subscriber_node = pose_subscriber.subscriber_node:main',
+            'test_publisher = pose_subscriber.publisher_test:main'
         ],
     },
 )

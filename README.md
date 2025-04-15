@@ -33,7 +33,10 @@ python main_multi_realsense.py
 ```
 source ../install/setup.bash
 
-ros2 launch pose_subscriber pose_subscriber.launch.py
+ros2 run pose_subscriber subscriber_node
+ros2 run pose_subscriber test_publisher
+
+# ros2 launch pose_subscriber pose_subscriber.launch.py
 ```
 
 
