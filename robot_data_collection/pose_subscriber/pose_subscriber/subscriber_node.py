@@ -87,7 +87,7 @@ def main(args=None):
         run_id = node.declare_parameter('run_id', '0').get_parameter_value().string_value
         node.destroy_node()
 
-    save_path = f'./data/task_{task_id}/op_{operator_id}/id_{run_id}/'
+    save_path = f'/home/qiangubuntu/research/data_collection/src/data/task_{task_id}/op_{operator_id}/id_{run_id}/'
     os.makedirs(save_path, exist_ok=True)
 
     msg_subscriber = Msg_Subscriber(save_path)

@@ -12,3 +12,7 @@
 /install/
 /log/
 /data/
+
+*.pyc
+
+**/__pycache__/

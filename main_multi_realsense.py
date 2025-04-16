@@ -35,11 +35,13 @@ def transform(data):
 
 def test(save_path):
     # 1. load config
-    config = json.load(open('/home/ipu/codes/DP4HRC/data_collection_realsense/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
+    config = json.load(open('/home/qiangubuntu/research/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
     resolution = [640, 480]
     fps = 30
+    serial_numbers = ['239722072823', '327122075831'] # 247122071632
 
     with MultiRealsense(
+            serial_numbers=serial_numbers,
             resolution=resolution,
             capture_fps=fps,
             record_fps=fps,
@@ -128,7 +130,7 @@ def test(save_path):
                 realsense.stop_recording()
 
             time.sleep(1/60)
-            if time.time() > (rec_start_time + 20.0):
+            if time.time() > (rec_start_time + 1000.0):
                 break
 
 
@@ -137,7 +139,7 @@ if __name__ == "__main__":
     operator_id = input("Human No.").strip()
     run_id = input("ID No.").strip()
 
-    save_path = './data'
+    save_path = '/home/qiangubuntu/research/data_collection/src/data'
     save_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}'
 
     os.makedirs(save_path, exist_ok=True)

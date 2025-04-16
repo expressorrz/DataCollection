@@ -31,6 +31,8 @@ python main_multi_realsense.py
 
 **Collecting Poses**
 ```
+ros2 launch realsense2_camera rs_launch.py camera_namespace:=robot1 camera_name:=D455_1 serial_no:=_247122071632 
+
 source ../install/setup.bash
 
 ros2 run pose_subscriber subscriber_node

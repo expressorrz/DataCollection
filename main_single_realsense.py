@@ -16,7 +16,7 @@ def test(video_path, data_path):
     serials = SingleRealsense.get_connected_devices_serial()
     # import pdb; pdb.set_trace()
     serial = serials[0]
-    config = json.load(open('/home/ipu/codes/DP4HRC/data_collection_realsense/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
+    config = json.load(open('/home/qiangubuntu/research/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
 
     def transform(data):
         color = data['color']
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     operator_id = input("Human No.").strip()
     run_id = input("ID No.").strip()
 
-    save_path = './data'
+    save_path = './home/qiangubuntu/research/data_collection/src/data'
     video_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}/video'
     data_path = f'{save_path}/task_{task_id}/op_{operator_id}/id_{run_id}'
 

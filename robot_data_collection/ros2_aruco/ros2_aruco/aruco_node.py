@@ -147,17 +147,17 @@ class ArucoNode(Node):
                 markers.poses.append(pose)
                 markers.marker_ids.append(marker_id[0])
 
-                # ✅ Draw axis on the image
-                if self.enable_viewer:
-                    cv2.aruco.drawAxis(
-                        cv_image, self.intrinsic_mat_eyeinhand, self.distortion_eyeinhand,
-                        rvecs[i], tvecs[i], self.marker_size * 0.5
-                    )
+            #     # ✅ Draw axis on the image
+            #     if self.enable_viewer:
+            #         cv2.aruco.drawAxis(
+            #             cv_image, self.intrinsic_mat_eyeinhand, self.distortion_eyeinhand,
+            #             rvecs[i], tvecs[i], self.marker_size * 0.5
+            #         )
 
-            # ✅ Show the image with overlays
-            if self.enable_viewer:
-                cv2.imshow("Aruco Viewer - Eye-in-hand", cv_image)
-                cv2.waitKey(1)
+            # # ✅ Show the image with overlays
+            # if self.enable_viewer:
+            #     cv2.imshow("Aruco Viewer - Eye-in-hand", cv_image)
+            #     cv2.waitKey(1)
 
             self.poses_pub_eyeinhand.publish(pose_array)
             self.markers_pub_eyeinhand.publish(markers)
