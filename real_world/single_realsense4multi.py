@@ -67,6 +67,18 @@ class SingleRealsense(mp.Process):
                 shape=shape, dtype=np.uint16)
             examples['depth_colormap'] = np.empty(
                 shape=shape+(3,), dtype=np.uint8)
+        if enable_pc:
+            if transform is not None:
+                examples['pc_ply'] = np.empty(
+                    shape=(int(shape[0] * shape[1] / 4), 3), dtype=np.float32)
+                examples['pc_pcd'] = np.empty(
+                    shape=(int(shape[0] * shape[1] / 4), 6), dtype=np.float32)
+            else:
+                examples['pc_ply'] = np.empty(
+                    shape=(shape[0] * shape[1], 3), dtype=np.float32)
+                examples['pc_pcd'] = np.empty(
+                    shape=(shape[0] * shape[1], 3), dtype=np.float32)
+
         if enable_infrared:
             examples['infrared'] = np.empty(
                 shape=shape, dtype=np.uint8)
@@ -411,10 +423,10 @@ class SingleRealsense(mp.Process):
                         data['depth_colormap'] = depth_colormap
                     
                     # data['depth'] = np.asarray(frameset.get_depth_frame().get_data())
-                # if self.enbale_pc:
-                #     pointcloud_data_ply, pointcloud_data_pcd = self.get_pointcloud(color_frame, depth_frame, color_image, depth_image, depth_colormap, self.pc)
-                #     data['pointcloud'] = pointcloud_data_ply
-                #     data['pointcloud_pcd'] = pointcloud_data_pcd
+                if self.enbale_pc:
+                    pointcloud_data_ply, pointcloud_data_pcd = get_pointcloud(color_frame, depth_frame, color_image, depth_image, depth_colormap, self.get_depth_scale, self.pc)
+                    data['pc_ply'] = pointcloud_data_ply
+                    data['pc_pcd'] = pointcloud_data_pcd
                     
                 if self.enable_infrared:
                     data['infrared'] = np.asarray(

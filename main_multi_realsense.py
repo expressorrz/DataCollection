@@ -78,6 +78,8 @@ def test(save_path):
                 data_group.require_dataset("color", shape=(0, resolution[1], resolution[0], 3), dtype='uint8', chunks=(1, resolution[1], resolution[0], 3), overwrite=False)
                 data_group.require_dataset("depth", shape=(0, resolution[1], resolution[0]), dtype='uint16', chunks=(1, resolution[1], resolution[0]), overwrite=False)
                 data_group.require_dataset("depth_colormap", shape=(0, resolution[1], resolution[0], 3), dtype='uint8', chunks=(1, resolution[1], resolution[0], 3), overwrite=False)
+                data_group.require_dataset("pc_ply", shape=(0, resolution[1] * resolution[0], 3), dtype='float32', chunks=(1, resolution[1] * resolution[0], 3), overwrite=False)
+                data_group.require_dataset("pc_pcd", shape=(0, resolution[1] * resolution[0], 6), dtype='float32', chunks=(1, resolution[1] * resolution[0], 6), overwrite=False)
                 data_group.require_dataset("timestamp", shape=(0,), dtype='float64', chunks=(1024,), overwrite=False)
                 data_group.require_dataset("step_idx", shape=(0,), dtype='int32', chunks=(1024,), overwrite=False)
 
@@ -120,6 +122,8 @@ def test(save_path):
                     data_groups[i]["color"].append(rec_data["color"][None, ...])
                     data_groups[i]["depth"].append(rec_data["depth"][None, ...])
                     data_groups[i]["depth_colormap"].append(rec_data["depth_colormap"][None, ...])
+                    data_groups[i]["pc_ply"].append(rec_data["pc_ply"][None, ...])
+                    data_groups[i]["pc_pcd"].append(rec_data["pc_pcd"][None, ...])
                     data_groups[i]["timestamp"].append(np.array([rec_data["timestamp"]]))
                     data_groups[i]["step_idx"].append(np.array([rec_data["step_idx"]], dtype=np.int32))
 

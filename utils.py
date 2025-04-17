@@ -10,7 +10,7 @@ def get_log_dir_index(out_dir):
 
     return log_dir_index
 
-def get_pointcloud(self, color_frame, depth_frame, color_image, depth_image, depth_colormap, pc, PointCloud_Process='method1'):
+def get_pointcloud(color_frame, depth_frame, color_image, depth_image, depth_colormap, depth_scale, pc, PointCloud_Process='method1'):
         depth_intrin = depth_frame.get_profile().as_video_stream_profile().get_intrinsics()
         g_depth_intrinsics_matrix = np.array([
             [depth_intrin.fx, 0., depth_intrin.ppx],
@@ -21,8 +21,8 @@ def get_pointcloud(self, color_frame, depth_frame, color_image, depth_image, dep
         if PointCloud_Process == 'method1':
             pointcloud_data_ply, pointcloud_data_pcd = pointcloud_xyz_rgb(color_frame, depth_frame, color_image, depth_colormap, pc)
         elif PointCloud_Process == 'method2':
-            pointcloud_data_ply = depth2xyz(depth_image, g_depth_intrinsics_matrix, self.g_depth_scale)
-            pointcloud_data_pcd = depth2xyzrgb(color_image, depth_image, g_depth_intrinsics_matrix, self.g_depth_scale)
+            pointcloud_data_ply = depth2xyz(depth_image, g_depth_intrinsics_matrix, depth_scale)
+            pointcloud_data_pcd = depth2xyzrgb(color_image, depth_image, g_depth_intrinsics_matrix, depth_scale)
 
         return pointcloud_data_ply, pointcloud_data_pcd
 
