@@ -92,6 +92,8 @@ def main(args=None):
     import sys
     rclpy.init(args=args)
 
+    # --------------------------------------------------------
+
     save_dir = '/home/ipu/codes/DP4HRC/data_collection/src/data'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -101,6 +103,7 @@ def main(args=None):
     os.makedirs(save_path, exist_ok=True)
 
     print(f'save_path: {save_path}')
+    # --------------------------------------------------------
 
     msg_subscriber = Msg_Subscriber(save_path)
 
