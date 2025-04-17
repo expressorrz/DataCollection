@@ -112,11 +112,16 @@ def get_image_transform(
         c_slice = slice(None, None, -1)
 
     def transform(img: np.ndarray):
-        assert img.shape == ((ih,iw,3))
+        assert img.shape == ((ih,iw,3)) or (ih,iw)
         # resize
         img = cv2.resize(img, (rw, rh), interpolation=interp_method)
         # crop
-        img = img[h_slice, w_slice, c_slice]
+        if img.ndim == 2:
+            img = img[h_slice, w_slice]
+        elif img.ndim == 3:
+            img = img[h_slice, w_slice, c_slice]
+        else:
+            raise ValueError(f"Invalid image shape: {img.shape}")
         return img
     return transform
 

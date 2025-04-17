@@ -14,6 +14,7 @@ from shared_memory.shared_ndarray import SharedNDArray
 from shared_memory.shared_memory_ring_buffer import SharedMemoryRingBuffer
 from shared_memory.shared_memory_queue import SharedMemoryQueue, Full, Empty
 
+from utils import get_pointcloud
 
 class Command(enum.Enum):
     SET_COLOR_OPTION = 0
@@ -36,7 +37,9 @@ class SingleRealsense(mp.Process):
             record_fps=None,
             enable_color=True,
             enable_depth=False,
+            enable_pc=False,
             enable_infrared=False,
+            enable_filter=True,
             get_max_k=30,
             advanced_mode_config=None,
             transform: Optional[Callable[[Dict], Dict]] = None,
@@ -62,6 +65,8 @@ class SingleRealsense(mp.Process):
         if enable_depth:
             examples['depth'] = np.empty(
                 shape=shape, dtype=np.uint16)
+            examples['depth_colormap'] = np.empty(
+                shape=shape+(3,), dtype=np.uint8)
         if enable_infrared:
             examples['infrared'] = np.empty(
                 shape=shape, dtype=np.uint8)
@@ -77,7 +82,8 @@ class SingleRealsense(mp.Process):
             get_max_k=1,
             get_time_budget=0.2,
             put_desired_frequency=capture_fps
-        )
+        )        
+
 
         ring_buffer = SharedMemoryRingBuffer.create_from_examples(
             shm_manager=shm_manager,
@@ -121,6 +127,8 @@ class SingleRealsense(mp.Process):
         self.record_fps = record_fps
         self.enable_color = enable_color
         self.enable_depth = enable_depth
+        self.enable_filter = enable_filter
+        self.enbale_pc = enable_pc
         self.enable_infrared = enable_infrared
         self.advanced_mode_config = advanced_mode_config
         self.transform = transform
@@ -137,6 +145,41 @@ class SingleRealsense(mp.Process):
         self.vis_ring_buffer = vis_ring_buffer
         self.command_queue = command_queue
         self.intrinsics_array = intrinsics_array
+
+        # initialize filters
+        self.g_colorizer = rs.colorizer(0)
+        # self.g_colorizer.set_option(rs.option.color_scheme, 2)
+        
+
+        self.pc = rs.pointcloud()
+
+        self.initialize_filter()
+
+    
+    def initialize_filter(self):
+        g_rs_downsample_filter = rs.decimation_filter(magnitude=2 ** 1,)   # downsample rate
+        g_rs_thres_filter = rs.threshold_filter(min_dist=0.1, max_dist=3.0)
+        g_rs_spatical_filter = rs.spatial_filter(
+            magnitude=2,
+            smooth_alpha=0.5,
+            smooth_delta=20,
+            hole_fill=0,
+        )
+        g_rs_templ_filter = rs.temporal_filter(
+            smooth_alpha=0.1,
+            smooth_delta=40.,
+            persistence_control=3
+        )
+        g_rs_depth2disparity_trans = rs.disparity_transform(True)
+        g_rs_disparity2depth_trans = rs.disparity_transform(False)
+        self.g_rs_depth_postprocess_list = [
+            g_rs_downsample_filter,
+            g_rs_thres_filter,
+            g_rs_depth2disparity_trans,
+            g_rs_spatical_filter,
+            g_rs_templ_filter,
+            g_rs_disparity2depth_trans
+        ]
 
     
     @staticmethod
@@ -351,12 +394,28 @@ class SingleRealsense(mp.Process):
                 data['camera_capture_timestamp'] = frameset.get_timestamp() / 1000
                 if self.enable_color:
                     color_frame = frameset.get_color_frame()
-                    data['color'] = np.asarray(color_frame.get_data())
+                    color_image = np.asarray(color_frame.get_data())
+                    data['color'] = color_image
                     t = color_frame.get_timestamp() / 1000
                     data['camera_capture_timestamp'] = t
                 if self.enable_depth:
-                    data['depth'] = np.asarray(
-                        frameset.get_depth_frame().get_data())
+                    if self.enable_filter:
+                        depth_frame = frameset.get_depth_frame()
+                        depth_frame_filter = depth_frame
+                        for filter in self.g_rs_depth_postprocess_list:
+                            depth_frame_filter = filter.process(depth_frame_filter)
+                        depth_frame = depth_frame_filter
+                        depth_image = np.asarray(depth_frame.get_data())
+                        depth_colormap = np.asarray(self.g_colorizer.colorize(depth_frame).get_data())
+                        data['depth'] = depth_image
+                        data['depth_colormap'] = depth_colormap
+                    
+                    # data['depth'] = np.asarray(frameset.get_depth_frame().get_data())
+                # if self.enbale_pc:
+                #     pointcloud_data_ply, pointcloud_data_pcd = self.get_pointcloud(color_frame, depth_frame, color_image, depth_image, depth_colormap, self.pc)
+                #     data['pointcloud'] = pointcloud_data_ply
+                #     data['pointcloud_pcd'] = pointcloud_data_pcd
+                    
                 if self.enable_infrared:
                     data['infrared'] = np.asarray(
                         frameset.get_infrared_frame().get_data())
