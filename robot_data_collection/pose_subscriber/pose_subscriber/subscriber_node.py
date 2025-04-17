@@ -8,6 +8,14 @@ from ros2_aruco_interfaces.msg import ArucoMarkers
 import os
 import zarr
 
+def get_log_dir_index(out_dir):
+    dirs = [x[0] for x in os.listdir(out_dir)]
+    if '.' in dirs:  # minor change for .ipynb
+        dirs.remove('.')
+    log_dir_index = str(len(dirs) - 1)
+
+    return log_dir_index
+
 class Msg_Subscriber(Node):
     def __init__(self, save_path):
         super().__init__('twist_subscriber')
@@ -23,6 +31,14 @@ class Msg_Subscriber(Node):
             self.pose_callback,
             10  # QoS
         )
+
+        if os.path.exists(os.path.join(save_path, 'pose_buffer.zarr')):
+            pose_buffer_path = os.path.join(save_path, 'pose_buffer.zarr')
+            if os.path.isdir(pose_buffer_path):
+                import shutil
+                shutil.rmtree(pose_buffer_path)
+            elif os.path.exists(pose_buffer_path):
+                os.remove(pose_buffer_path)
 
         root = zarr.open(os.path.join(save_path, 'pose_buffer.zarr'), mode='a')
         self.zarr_group = root.require_group('pose_data')
@@ -76,19 +92,15 @@ def main(args=None):
     import sys
     rclpy.init(args=args)
 
-    if sys.stdin.isatty():
-        task_id = input("Task No: ").strip()
-        operator_id = input("Human No: ").strip()
-        run_id = input("ID No: ").strip()
-    else:
-        node = rclpy.create_node('param_loader')
-        task_id = node.declare_parameter('task_id', '0').get_parameter_value().string_value
-        operator_id = node.declare_parameter('operator_id', '0').get_parameter_value().string_value
-        run_id = node.declare_parameter('run_id', '0').get_parameter_value().string_value
-        node.destroy_node()
+    save_dir = '/home/ipu/codes/DP4HRC/data_collection/src/data'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
-    save_path = f'/home/qiangubuntu/research/data_collection/src/data/task_{task_id}/op_{operator_id}/id_{run_id}/'
+    idx = get_log_dir_index(save_dir)
+    save_path = '%s/%s' % (save_dir, idx)
     os.makedirs(save_path, exist_ok=True)
+
+    print(f'save_path: {save_path}')
 
     msg_subscriber = Msg_Subscriber(save_path)
 
