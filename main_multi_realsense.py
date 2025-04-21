@@ -22,10 +22,16 @@ import zarr
 #     data['color'] = color
 #     return data
 
+# 1280, 720
+# 640, 480
+
+
+
+
 from common.cv2_util import get_image_transform
 color_transform = get_image_transform(
-    input_res=(640,480),
-    output_res=(320,240), 
+    input_res=(1280, 720),
+    output_res=(640, 360), 
     bgr_to_rgb=False)
 
 def transform(data):
@@ -38,7 +44,7 @@ def transform(data):
 def test(save_path):
     # 1. load config
     config = json.load(open('/home/ipu/codes/DP4HRC/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
-    resolution = [640, 480]
+    resolution = [1280, 720]
     fps = 30
     serial_numbers = ['327122075831'] # 247122071632,  239722072823
 
