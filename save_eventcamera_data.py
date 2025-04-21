@@ -6,6 +6,18 @@ import numpy as np
 import pandas as pd
 import time
 
+import zarr
+
+def get_log_dir_index(out_dir):
+    dirs = [x[0] for x in os.listdir(out_dir)]
+    if '.' in dirs:  # minor change for .ipynb
+        dirs.remove('.')
+    log_dir_index = str(len(dirs) - 1)
+
+    return log_dir_index
+
+
+
 camera = dv.io.CameraCapture()
 eventsAvailable = camera.isEventStreamAvailable()
 framesAvailable = camera.isFrameStreamAvailable()
@@ -41,6 +53,16 @@ os.makedirs(events_folderpath, exist_ok=True)
 png_folderpath = f'{save_path}/png'
 os.makedirs(png_folderpath, exist_ok=True)
 
+
+# save data to zarr
+root = zarr.open_group(os.path.join(save_path, 'event_buffer.zarr'), mode='w')
+
+data_group = root.create_group('events', overwrite=True)
+data_group.require_dataset('event_img', shape=(0, 346, 260, 3), chunks=(1, 346, 260, 3), dtype='uint8', overwrite=False)
+data_group.require_dataset('event', shape=(0, 10000, 3), chunks=(1, 10000, 3), dtype='uint8', overwrite=False)
+data_group.require_dataset('timestamps', shape=(0,), chunks=(1024,), dtype='uint64', overwrite=False)
+data_group.require_dataset('timestamps_final', shape=(0,), chunks=(1024,), dtype='uint64', overwrite=False)
+
 # base, ext = os.path.splitext(aedat4_path)
 # counter = 1
 # while os.path.exists(aedat4_path):
@@ -57,13 +79,6 @@ visualizer = dv.visualization.EventVisualizer((346, 260), dv.visualization.color
 # Initialize the counter variable globally
 counter = 0
 
-def get_log_dir_index(out_dir):
-    dirs = [x[0] for x in os.listdir(out_dir)]
-    if '.' in dirs:  # minor change for .ipynb
-        dirs.remove('.')
-    log_dir_index = str(len(dirs) - 1)
-
-    return log_dir_index
 
 def saveData(data):
     events = data.getEvents("events")
@@ -74,15 +89,22 @@ def saveData(data):
 
     if events is not None:
         # 将events保存为csv文件
-        events_packets.append(pd.DataFrame(events.numpy()))
-        events_pandas = pd.concat(events_packets)
-        events_pandas.to_csv(events_csv_path)
+        # events_packets.append(pd.DataFrame(events.numpy()))
+        # events_pandas = pd.concat(events_packets)
+        # events_pandas.to_csv(events_csv_path)
 
         # 将events保存为png文件
         first_time = events[0].timestamp()
         last_time = events[events.size() - 1].timestamp()
-        filename = os.path.join(png_folderpath, f"{counter}.png")
-        cv.imwrite(filename, visualizer.generateImage(events))
+        event_data = visualizer.generateImage(events)
+        raw_events = events.numpy()[:, 2:]
+        data_group['event_img'].append(event_data[None, ...])
+        data_group['event'].append(raw_events[None, ...])
+        data_group['timestamps'].append(np.array([first_time], dtype=np.uint64))
+        data_group['timestamps_final'].append(np.array([last_time], dtype=np.uint64))
+
+        # filename = os.path.join(png_folderpath, f"{counter}.png")
+        # cv.imwrite(filename, visualizer.generateImage(events))
 
     counter += 1  
 
