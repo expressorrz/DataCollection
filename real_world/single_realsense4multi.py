@@ -77,7 +77,7 @@ class SingleRealsense(mp.Process):
                 examples['pc_ply'] = np.empty(
                     shape=(shape[0] * shape[1], 3), dtype=np.float32)
                 examples['pc_pcd'] = np.empty(
-                    shape=(shape[0] * shape[1], 3), dtype=np.float32)
+                    shape=(shape[0] * shape[1], 6), dtype=np.float32)
 
         if enable_infrared:
             examples['infrared'] = np.empty(
@@ -169,7 +169,10 @@ class SingleRealsense(mp.Process):
 
     
     def initialize_filter(self):
-        g_rs_downsample_filter = rs.decimation_filter(magnitude=2 ** 1,)   # downsample rate
+        if self.transform is not None:
+            g_rs_downsample_filter = rs.decimation_filter(magnitude=2 ** 1,)   # downsample rate
+        else:
+            g_rs_downsample_filter = rs.decimation_filter(magnitude=1 ** 1,)
         g_rs_thres_filter = rs.threshold_filter(min_dist=0.1, max_dist=3.0)
         g_rs_spatical_filter = rs.spatial_filter(
             magnitude=2,

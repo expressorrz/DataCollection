@@ -2,6 +2,19 @@ import os
 import cv2
 import numpy as np
 
+from common.cv2_util import get_image_transform
+color_transform = get_image_transform(
+    input_res=(640, 480),
+    output_res=(320, 240), 
+    bgr_to_rgb=False)
+
+def transform(data):
+    data['color'] = color_transform(data['color'])
+    data['depth'] = color_transform(data['depth'])
+    data['depth_colormap'] = color_transform(data['depth_colormap'])
+    return data
+
+
 def get_log_dir_index(out_dir):
     dirs = [x[0] for x in os.listdir(out_dir)]
     if '.' in dirs:  # minor change for .ipynb

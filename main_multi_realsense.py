@@ -10,7 +10,7 @@ import json
 import time
 import numpy as np
 from real_world.multi_realsense import MultiRealsense
-from utils import get_log_dir_index
+from utils import get_log_dir_index, transform
 
 import zarr
 
@@ -22,31 +22,18 @@ import zarr
 #     data['color'] = color
 #     return data
 
-# 1280, 720
-# 640, 480
+# 1280, 960 640, 480
+# 640, 480  320, 240
 
-
-
-
-from common.cv2_util import get_image_transform
-color_transform = get_image_transform(
-    input_res=(1280, 720),
-    output_res=(640, 360), 
-    bgr_to_rgb=False)
-
-def transform(data):
-    data['color'] = color_transform(data['color'])
-    data['depth'] = color_transform(data['depth'])
-    data['depth_colormap'] = color_transform(data['depth_colormap'])
-    return data
 
 
 def test(save_path):
     # 1. load config
     config = json.load(open('/home/ipu/codes/DP4HRC/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
-    resolution = [1280, 720]
+    resolution = [640, 480]
     fps = 30
     serial_numbers = ['327122075831'] # 247122071632,  239722072823
+    enbale_transform = False
 
     with MultiRealsense(
             serial_numbers=serial_numbers,
@@ -57,9 +44,9 @@ def test(save_path):
             enable_depth=True,
             enable_filter=True,
             enable_pc=True,
-            transform=transform,
-            vis_transform=transform,
-            recording_transform=transform,
+            # transform=transform,
+            # vis_transform=transform,
+            # recording_transform=transform,
             # verbose=True
         ) as realsense:
         cv2.setNumThreads(1)
@@ -67,7 +54,8 @@ def test(save_path):
         n_cams = realsense.n_cameras
         recording = False
 
-        if transform is not None:
+        if enbale_transform:
+            print('enable transform')
             resolution = [resolution[0] // 2, resolution[1] // 2]
 
          # 2. create data and metadata for zarr
