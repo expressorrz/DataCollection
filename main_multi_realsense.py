@@ -14,22 +14,10 @@ from utils import get_log_dir_index, transform
 
 import zarr
 
-# def transform(data):
-#     color = data['color']
-#     h,w,_ = color.shape
-#     factor = 2
-#     color = cv2.resize(color, (w//factor,h//factor), interpolation=cv2.INTER_AREA)
-#     data['color'] = color
-#     return data
-
-# 1280, 960 640, 480
-# 640, 480  320, 240
-
-
 
 def test(save_path):
     # 1. load config
-    config = json.load(open('/home/qiangubuntu/research/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
+    config = json.load(open('/home/qiangubuntu/research/data_collection/src/real_world/realsense_config/435_high_accuracy_mode.json', 'r'))
     resolution = [640, 480]
     fps = 30
     serial_numbers = ['327122075831', '239722072823', '247122071632'] # eyeinhand: 247122071632
@@ -43,7 +31,8 @@ def test(save_path):
             enable_color=True,
             enable_depth=True,
             enable_filter=True,
-            enable_pc=True,
+            enable_pc=False,
+            advanced_mode_config=config,
             # transform=transform,
             # vis_transform=transform,
             # recording_transform=transform,
