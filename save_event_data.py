@@ -75,7 +75,7 @@ def saveData(data):
     data_group['timestamps'].append(np.array([first_time], dtype=np.uint64))
     data_group['timestamps_final'].append(np.array([last_time], dtype=np.uint64))
 
-    # # 将events保存为png文件
+    # 将events保存为png文件
     # events_png_path = f'{save_path}/event_png'
     # os.makedirs(events_png_path, exist_ok=True)
     # events_png_path = os.path.join(events_png_path, f"{counter}.png")
