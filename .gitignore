@@ -16,3 +16,5 @@
 *.pyc
 
 **/__pycache__/
+
+read_data.ipynb

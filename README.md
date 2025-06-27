@@ -31,7 +31,7 @@ python main_multi_realsense.py
 
 **Collecting Poses**
 ```
-ros2 launch realsense2_camera rs_launch.py camera_namespace:=robot1 camera_name:=D455_1 serial_no:=_247122071632 
+ros2 launch realsense2_camera rs_launch.py camera_namespace:=robot1 camera_name:=D455_1 rgb_camera.color_profile:=1920x1080x30
 
 source ../install/setup.bash
 

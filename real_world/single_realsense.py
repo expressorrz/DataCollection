@@ -17,6 +17,8 @@ import zarr
 import numcodecs
 
 
+
+
 class Command(enum.Enum):
     SET_COLOR_OPTION = 0
     SET_DEPTH_OPTION = 1
@@ -31,7 +33,7 @@ class SingleRealsense(mp.Process):
             self, 
             shm_manager: SharedMemoryManager,
             serial_number,
-            resolution=(1280,720),
+            resolution=(1920,1080),
             capture_fps=30,
             put_fps=None,
             put_downsample=False,
@@ -319,6 +321,7 @@ class SingleRealsense(mp.Process):
 
             # start pipeline
             pipeline = rs.pipeline()
+            
             pipeline_profile = pipeline.start(rs_config)
 
             # report global time
