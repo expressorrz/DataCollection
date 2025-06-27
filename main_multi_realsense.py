@@ -29,10 +29,10 @@ import zarr
 
 def test(save_path):
     # 1. load config
-    config = json.load(open('/home/ipu/codes/DP4HRC/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
+    config = json.load(open('/home/qiangubuntu/research/data_collection/src/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
     resolution = [640, 480]
     fps = 30
-    serial_numbers = ['327122075831'] # 247122071632,  239722072823
+    serial_numbers = ['327122075831', '239722072823', '247122071632'] # eyeinhand: 247122071632
     enbale_transform = False
 
     with MultiRealsense(
@@ -150,7 +150,7 @@ def test(save_path):
 
 
 if __name__ == "__main__":
-    save_dir = '/home/ipu/codes/DP4HRC/data_collection/src/data'
+    save_dir = '/home/qiangubuntu/research/data_collection/src/data'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
